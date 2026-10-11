@@ -1,0 +1,169 @@
+// Schema multi-casamento. Todo dado de negócio pertence a um Wedding (isolamento por tenant).
+// Enums são strings para manter compatibilidade SQLite (dev) -> Postgres (produção).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  username           String    @unique
+  passwordHash       String
+  mustChangePassword Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  weddings           Wedding[]
+}
+
+model Wedding {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+
+  settings    WeddingSettings?
+  invitations Invitation[]
+  favors      Favor[]
+  gifts       Gift[]
+  photos      GalleryPhoto[]
+}
+
+model WeddingSettings {
+  id        String  @id @default(cuid())
+  weddingId String  @unique
+  wedding   Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+
+  groomName String
+  brideName String
+  // Data + horário da cerimônia (UTC no banco; exibido em America/Sao_Paulo)
+  eventAt   DateTime?
+  venueName String    @default("")
+  address   String    @default("")
+  mapsUrl   String    @default("")
+  dressCode String    @default("")
+
+  welcomeMessage String @default("")
+  story          String @default("")
+  rsvpMessage    String @default("")
+  finalMessage   String @default("")
+  pixKey         String @default("")
+  heroPhotoUrl   String @default("")
+}
+
+model Invitation {
+  id        String  @id @default(cuid())
+  weddingId String
+  wedding   Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+
+  // slug amigável + sufixo aleatório (não adivinhável); único por casamento
+  slug         String
+  displayName  String
+  // INDIVIDUAL | PLUS_ONE | COUPLE | FAMILY
+  type         String
+  maxGuests    Int
+  favorCount   Int      @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  rsvp         InvitationRSVP?
+  favorAnswers FavorAnswer[]
+  giftSelections GiftSelection[]
+
+  @@unique([weddingId, slug])
+  @@index([weddingId])
+}
+
+model InvitationRSVP {
+  id           String     @id @default(cuid())
+  invitationId String     @unique
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  // CONFIRMED | DECLINED
+  status       String
+  adults       Int        @default(0)
+  children     Int        @default(0)
+  // true quando o convidado alterou uma resposta já enviada
+  changed      Boolean    @default(false)
+  respondedAt  DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Favor {
+  id        String  @id @default(cuid())
+  weddingId String
+  wedding   Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name      String
+  position  Int     @default(0)
+
+  questions FavorQuestion[]
+
+  @@index([weddingId])
+}
+
+model FavorQuestion {
+  id       String @id @default(cuid())
+  favorId  String
+  favor    Favor  @relation(fields: [favorId], references: [id], onDelete: Cascade)
+  label    String
+  // Opções separadas por "|" (ex.: "P|M|G|GG"); vazio = resposta livre
+  options  String @default("")
+  position Int    @default(0)
+
+  answers FavorAnswer[]
+}
+
+model FavorAnswer {
+  id           String        @id @default(cuid())
+  invitationId String
+  invitation   Invitation    @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  questionId   String
+  question     FavorQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  // Qual lembrancinha do convite (1..favorCount)
+  itemIndex    Int
+  value        String
+
+  @@unique([invitationId, questionId, itemIndex])
+}
+
+model Gift {
+  id         String    @id @default(cuid())
+  weddingId  String
+  wedding    Wedding   @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name       String
+  priceCents Int
+  url        String
+  imageUrl   String    @default("")
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  selections GiftSelection[]
+
+  @@index([weddingId])
+}
+
+// Cada linha = 1 unidade escolhida. invitationId é interno e nunca exposto a outros convidados.
+model GiftSelection {
+  id           String     @id @default(cuid())
+  giftId       String
+  gift         Gift       @relation(fields: [giftId], references: [id], onDelete: Cascade)
+  invitationId String
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@index([giftId])
+}
+
+model GalleryPhoto {
+  id        String  @id @default(cuid())
+  weddingId String
+  wedding   Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int     @default(0)
+  isCover   Boolean @default(false)
+
+  @@index([weddingId])
+}

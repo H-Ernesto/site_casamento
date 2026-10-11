@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-script: var(--font-script);
+  --font-caps: var(--font-caps);
+  --font-sans: var(--font-sans);
+  --color-cream: #FAF7F2;
+  --color-cream-subtle: #F4EFEA;
+  --color-cream-muted: #E8E2D8;
+  --color-ink: #2C221A;
+  --color-ink-muted: #5E4E41;
+  --color-olive: #7c8d5b;
+  --color-olive-deep: #47582e;
+  --color-sunset: #d9753e;
+  --color-gold: #cfa043;
+  --color-lilac: #a98fb9;
+  --color-rose: #c97972;
+}
+
+html, body {
+  min-height: 100%;
+  background: #FAF7F2;
+  color: #2C221A;
+  font-family: var(--font-sans), sans-serif;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+/* Esconde barra de rolagem preservando a rolagem horizontal/vertical */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Entrada suave e discreta das seções */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.reveal { animation: fade-up 0.8s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+  html { scroll-behavior: auto; }
+}
