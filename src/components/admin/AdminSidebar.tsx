@@ -102,27 +102,26 @@ export default function AdminSidebar({ coupleName, username, logoutAction }: Adm
       >
         {/* Painel da Barra Lateral */}
         <aside
-          className={`flex flex-col justify-center min-h-screen border-r border-slate-200/80 bg-white/95 backdrop-blur-md shadow-2xl transition-all duration-300 ease-in-out ${
-            // Em desktop, quando passar o mouse por cima (ou na área), ela expande/aparece para 260px; caso contrário fica numa alça discreta
+          className={`flex flex-col justify-center min-h-screen border-r border-slate-200/80 bg-white/95 backdrop-blur-md shadow-2xl transition-all duration-300 ease-in-out w-64 ${
+            // Em desktop, quando passar o mouse por cima ela expande para 256px (w-64); caso contrário fica compacta (w-16)
             isHovered
-              ? "w-64 opacity-100"
-              : "md:w-16 md:opacity-90 w-64"
+              ? "md:w-64 md:opacity-100"
+              : "md:w-16 md:opacity-90"
           }`}
         >
           {/* Conteúdo Centralizado Verticalmente */}
           <div className="flex flex-col justify-between h-full py-8 px-3">
             {/* Topo: Identificação do Casamento */}
-            <div className={`transition-all duration-200 ${isHovered ? "px-2" : "md:px-0 text-center"}`}>
+            <div className={`transition-all duration-200 px-2 ${isHovered ? "md:px-2" : "md:px-0 md:text-center"}`}>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 shrink-0 rounded-xl bg-[#7c8d5b] text-white flex items-center justify-center font-bold text-base shadow-sm">
                   GD
                 </div>
-                {isHovered && (
-                  <div className="overflow-hidden whitespace-nowrap transition-opacity duration-200">
-                    <p className="text-[10px] font-bold tracking-wider uppercase text-[#7c8d5b]">Painel dos Noivos</p>
-                    <p className="font-semibold text-slate-800 text-sm truncate">{coupleName}</p>
-                  </div>
-                )}
+                {/* No mobile sempre exibe; no desktop exibe no hover */}
+                <div className={`overflow-hidden whitespace-nowrap transition-opacity duration-200 ${isHovered ? "block" : "block md:hidden"}`}>
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-[#7c8d5b]">Painel dos Noivos</p>
+                  <p className="font-semibold text-slate-800 text-sm truncate">{coupleName}</p>
+                </div>
               </div>
             </div>
 
@@ -145,11 +144,10 @@ export default function AdminSidebar({ coupleName, username, logoutAction }: Adm
                     <span className={`${isActive ? "text-white" : "text-slate-500 group-hover:text-[#7c8d5b]"}`}>
                       {item.icon}
                     </span>
-                    {isHovered && (
-                      <span className="whitespace-nowrap overflow-hidden transition-opacity duration-200">
-                        {item.label}
-                      </span>
-                    )}
+                    {/* No mobile sempre exibe o nome; no desktop exibe quando hovered */}
+                    <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-200 ${isHovered ? "inline" : "inline md:hidden"}`}>
+                      {item.label}
+                    </span>
                   </Link>
                 );
               })}
@@ -157,24 +155,22 @@ export default function AdminSidebar({ coupleName, username, logoutAction }: Adm
 
             {/* Base: Perfil e Logout */}
             <div className="border-t border-slate-100 pt-4">
-              {isHovered && (
-                <div className="mb-2 px-3">
-                  <p className="text-[11px] text-slate-400">Conectado como</p>
-                  <p className="text-xs font-semibold text-slate-700 truncate">{username}</p>
-                </div>
-              )}
+              <div className={`mb-2 px-3 ${isHovered ? "block" : "block md:hidden"}`}>
+                <p className="text-[11px] text-slate-400">Conectado como</p>
+                <p className="text-xs font-semibold text-slate-700 truncate">{username}</p>
+              </div>
               <form action={logoutAction}>
                 <button
                   type="submit"
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50 transition ${
-                    !isHovered ? "justify-center md:px-0" : ""
+                    !isHovered ? "md:justify-center md:px-0" : ""
                   }`}
                   title={!isHovered ? "Sair da conta" : undefined}
                 >
                   <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  {isHovered && <span className="whitespace-nowrap">Sair</span>}
+                  <span className={`whitespace-nowrap ${isHovered ? "inline" : "inline md:hidden"}`}>Sair</span>
                 </button>
               </form>
             </div>

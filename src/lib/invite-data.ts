@@ -97,3 +97,59 @@ export async function getPublicInvite(weddingSlug: string, inviteSlug: string) {
 }
 
 export type PublicInvite = NonNullable<Awaited<ReturnType<typeof getPublicInvite>>>;
+
+/**
+ * Carrega SOMENTE os dados públicos gerais do casamento (História, Fotos, Presentes, Informações básicas).
+ * Não depende de nenhum convite específico.
+ */
+export async function getPublicWedding(weddingSlug?: string) {
+  const where = weddingSlug ? { slug: weddingSlug } : {};
+  const wedding = await db.wedding.findFirst({
+    where,
+    include: {
+      settings: true,
+      photos: { orderBy: [{ isCover: "desc" }, { position: "asc" }] },
+      gifts: {
+        where: { archivedAt: null },
+        orderBy: { createdAt: "desc" },
+        include: {
+          _count: {
+            select: { selections: true },
+          },
+        },
+      },
+    },
+  });
+  if (!wedding || !wedding.settings) return null;
+  const s = wedding.settings;
+
+  return {
+    wedding: { slug: wedding.slug },
+    settings: {
+      groomName: s.groomName,
+      brideName: s.brideName,
+      eventAt: s.eventAt,
+      venueName: s.venueName,
+      address: s.address,
+      mapsUrl: s.mapsUrl,
+      dressCode: s.dressCode,
+      welcomeMessage: s.welcomeMessage,
+      story: s.story,
+      rsvpMessage: s.rsvpMessage,
+      finalMessage: s.finalMessage,
+      pixKey: s.pixKey,
+      heroPhotoUrl: s.heroPhotoUrl,
+    },
+    photos: wedding.photos.map((p) => ({ id: p.id, url: p.url })),
+    gifts: wedding.gifts.map((g) => ({
+      id: g.id,
+      name: g.name,
+      priceCents: g.priceCents,
+      url: g.url,
+      imageUrl: g.imageUrl,
+      selectedCount: g._count.selections,
+    })),
+  };
+}
+
+export type PublicWedding = NonNullable<Awaited<ReturnType<typeof getPublicWedding>>>;

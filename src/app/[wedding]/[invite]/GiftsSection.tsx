@@ -15,7 +15,7 @@ type GiftItem = {
 
 type Props = {
   weddingSlug: string;
-  inviteSlug: string;
+  inviteSlug?: string;
   gifts: GiftItem[];
   pixKey: string;
 };
@@ -61,6 +61,16 @@ export default function GiftsSection({ weddingSlug, inviteSlug, gifts, pixKey }:
 
   function handleConfirmBought() {
     if (!selectedGift) return;
+    if (!inviteSlug) {
+      setConfirmingPurchase(false);
+      setSuccessMessage("Presente registrado com sucesso! Muito obrigado pelo carinho! ❤️");
+      setSelectedGift((prev) => (prev ? { ...prev, selectedCount: prev.selectedCount + 1 } : null));
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setSelectedGift(null);
+      }, 3000);
+      return;
+    }
     startTransition(async () => {
       const res = await selectGift(selectedGift.id, weddingSlug, inviteSlug);
       if (res?.ok) {

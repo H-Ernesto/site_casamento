@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Countdown from "@/components/Countdown";
-import Carousel from "@/components/Carousel";
 import Navbar from "@/components/Navbar";
 import { getPublicInvite } from "@/lib/invite-data";
 import RsvpForm from "./RsvpForm";
-import GiftsSection from "./GiftsSection";
 import FavorsSection from "./FavorsSection";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +58,7 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
   const data = await getPublicInvite(wedding, invite);
   if (!data) notFound();
 
-  // Salva cookie para lembrar este convite caso o convidado recarregue ou volte à raiz
+  // Salva cookie para lembrar este convite caso o convidado recarregue ou navegue entre abas
   try {
     const cookieStore = await cookies();
     cookieStore.set("gd_last_invite", `/${wedding}/${invite}`, {
@@ -71,7 +70,7 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
     // ignorar
   }
 
-  const { settings: s, invitation, photos, gifts, favors, favorAnswers, rsvp } = data;
+  const { settings: s, invitation, favors, favorAnswers, rsvp } = data;
   const eventDate = s.eventAt
     ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "long", year: "numeric" }).format(s.eventAt)
     : null;
@@ -87,14 +86,14 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
 
   return (
     <main className="min-h-screen bg-cream text-ink antialiased">
-      {/* Barra de navegação que surge suavemente ao rolar */}
+      {/* Barra de navegação que surge suavemente ao rolar e dá acesso a Convite, Nossa História e Lista de Presentes */}
       <Navbar
         groomName={s.groomName}
         brideName={s.brideName}
-        hasStory={Boolean(s.story)}
-        hasPhotos={photos.length > 0}
-        hasGifts={gifts.length > 0 || Boolean(s.pixKey)}
-        hasFavors={invitation.favorCount > 0 && favors.length > 0}
+        currentPage="convite"
+        inviteUrl={`/${wedding}/${invitation.slug}`}
+        storyUrl={`/${wedding}/historia?convite=${invitation.slug}`}
+        giftsUrl={`/${wedding}/presentes?convite=${invitation.slug}`}
       />
 
       {/* 1. ABERTURA HERO */}
@@ -145,36 +144,7 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
         </Section>
       )}
 
-      {/* 3. NOSSA HISTÓRIA */}
-      {s.story && (
-        <div className="relative py-2 sm:py-4">
-          <Section id="historia" title="Nossa História">
-            <div className="relative mx-auto max-w-3xl overflow-hidden rounded-3xl border border-stone-200/80 bg-gradient-to-b from-white/95 to-[#FAF6F0]/90 p-8 shadow-sm text-center sm:p-12">
-              <span className="pointer-events-none absolute -top-5 left-6 font-serif text-8xl text-[#7c8d5b]/12 select-none">“</span>
-              <p className="relative z-10 text-base sm:text-lg leading-relaxed whitespace-pre-line text-[#3B2D21]">
-                {s.story}
-              </p>
-            </div>
-          </Section>
-        </div>
-      )}
-
-      {/* 4. ÁLBUM DE FOTOS */}
-      {photos.length > 0 && (
-        <div className="relative py-4 sm:py-8 bg-gradient-to-b from-transparent via-[#F1F5EB]/50 to-transparent">
-          <section id="album" className="reveal mx-auto max-w-5xl px-6 py-12 sm:py-16 text-center">
-            <div className="flex items-center justify-center gap-3 mb-2.5">
-              <span className="h-[1px] w-10 sm:w-16 bg-gradient-to-r from-transparent to-[#7c8d5b]/40" />
-              <Lily className="h-6 w-6 text-[#7c8d5b]" />
-              <span className="h-[1px] w-10 sm:w-16 bg-gradient-to-l from-transparent to-[#7c8d5b]/40" />
-            </div>
-            <h2 className="mb-8 font-script text-5xl text-[#47582e] sm:text-6xl md:text-7xl">Álbum</h2>
-            <Carousel photos={photos} />
-          </section>
-        </div>
-      )}
-
-      {/* 5. INFORMAÇÕES DO CASAMENTO (Cards Modernos e Altamente Legíveis) */}
+      {/* 3. INFORMAÇÕES DO CASAMENTO (Cards Modernos e Altamente Legíveis) */}
       <Section id="informacoes" title="Informações">
         <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 sm:gap-6 text-center">
           {/* Card Data & Hora */}
@@ -222,19 +192,27 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
         </div>
       </Section>
 
-      {/* 6. LISTA DE PRESENTES + PIX */}
-      {(gifts.length > 0 || s.pixKey) && (
-        <Section id="presentes" title="Lista de Presentes">
-          <GiftsSection
-            weddingSlug={data.wedding.slug}
-            inviteSlug={invitation.slug}
-            gifts={gifts}
-            pixKey={s.pixKey}
-          />
-        </Section>
-      )}
+      {/* 4. LISTA DE PRESENTES - BOTÃO DE ACESSO NO LUGAR ORIGINAL */}
+      <Section id="presentes" title="Lista de Presentes">
+        <div className="mx-auto max-w-2xl rounded-3xl border border-stone-200/90 bg-white/85 p-8 text-center shadow-xs sm:p-10 backdrop-blur-xs">
+          <p className="text-base sm:text-lg leading-relaxed text-[#5E4E41]">
+            A sua presença é o maior presente para nós! Caso deseje nos presentear com algo para o nosso novo lar, preparamos uma página especial com todos os itens, cotas e opções via Pix.
+          </p>
+          <div className="mt-8">
+            <Link
+              href={`/${wedding}/presentes?convite=${invitation.slug}`}
+              className="inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-[#47582e] px-8 py-3.5 font-caps text-xs tracking-widest text-white shadow-md transition-all duration-200 hover:bg-[#394725] hover:shadow-lg hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#47582e]"
+            >
+              <span>VER LISTA DE PRESENTES</span>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </Section>
 
-      {/* 7. LEMBRANCINHAS */}
+      {/* 5. LEMBRANCINHAS (quando aplicável ao convite) */}
       {invitation.favorCount > 0 && favors.length > 0 && (
         <Section id="lembrancinhas" title="Lembrancinhas">
           <FavorsSection
@@ -247,7 +225,7 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
         </Section>
       )}
 
-      {/* 8. CONFIRMAÇÃO DE PRESENÇA */}
+      {/* 6. CONFIRMAÇÃO DE PRESENÇA */}
       <Section id="confirmacao" title="Confirmação de Presença">
         <RsvpForm
           weddingSlug={data.wedding.slug}
@@ -259,7 +237,7 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
         />
       </Section>
 
-      {/* 9. LOCAL / MAPA */}
+      {/* 7. LOCAL / MAPA */}
       {(s.address || mapsHref) && (
         <Section id="local" title="Local">
           <div className="mx-auto max-w-3xl rounded-3xl border border-stone-200/80 bg-white/85 p-6 sm:p-8 shadow-xs">
@@ -295,7 +273,7 @@ export default async function InvitePage({ params }: { params: Promise<Params> }
         </Section>
       )}
 
-      {/* 10. MENSAGEM FINAL */}
+      {/* 8. MENSAGEM FINAL */}
       <footer className="reveal px-6 py-20 text-center">
         <div className="flex items-center justify-center gap-3 mb-3">
           <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#7c8d5b]/40" />
