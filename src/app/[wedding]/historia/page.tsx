@@ -85,11 +85,9 @@ export default async function HistoriaPage({
           {s.groomName} &amp; {s.brideName}
         </p>
         <h1 className="mt-2 font-script text-6xl text-[#47582e] sm:text-7xl md:text-8xl">
-          Nossa História &amp; Álbum
+          Nossa História
         </h1>
-        <p className="mt-3 text-sm text-[#5E4E41] max-w-xl mx-auto sm:text-base">
-          Momentos especiais e a trajetória que nos trouxe até o dia mais importante de nossas vidas.
-        </p>
+
       </header>
 
       {/* 1. SEÇÃO: NOSSA HISTÓRIA */}

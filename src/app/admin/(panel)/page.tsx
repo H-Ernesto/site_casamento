@@ -31,6 +31,7 @@ export default async function Overview() {
   const adults = confirmed.reduce((n, i) => n + (i.rsvp?.adults ?? 0), 0);
   const children = confirmed.reduce((n, i) => n + (i.rsvp?.children ?? 0), 0);
   const totalGuests = adults + children;
+  const totalInvitedPeople = invitations.reduce((n, i) => n + (i.maxGuests ?? 0), 0);
 
   // 2. Resumo de Lembrancinhas
   const totalFavorsExpected = invitations.reduce((n, i) => n + i.favorCount, 0);
@@ -124,7 +125,7 @@ export default async function Overview() {
           <StatCard label="Total de convites" value={totalInvites} subtext="Cadastrados no sistema" />
           <StatCard label="Convites confirmados" value={confirmed.length} subtext={`${rsvpResponseRate}% de retorno`} />
           <StatCard label="Pendentes" value={pending.length} subtext="Aguardando resposta" />
-          <StatCard label="Total de presentes" value={totalGiftsCount} subtext={`${totalGiftsSelected} unidades compradas`} />
+          <StatCard label="Total de pessoas convidadas" value={totalInvitedPeople} subtext={`${totalGuests} confirmadas`} />
         </div>
       </div>
 
